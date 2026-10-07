@@ -1,0 +1,5 @@
+sphinx>=7,<9
+piccolo-theme>=0.24
+sphinx-copybutton>=0.5
+numpy>=1.23
+Pillow>=9.1

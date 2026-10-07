@@ -1,0 +1,30 @@
+/* Piccolo caps the text column at 45rem; use more of the space between the
+   sidebars so code examples and tables fit without horizontal scrolling. */
+div.document div.documentwrapper,
+div.button_nav_wrapper div.button_nav {
+  max-width: 55rem;
+}
+
+/* The home page shows the logo in place of its text title. */
+section:has(> img.scenezoo-logo) > h1 {
+  display: none;
+}
+
+div.document img.scenezoo-logo {
+  width: 100%;
+  max-width: 28.8rem;
+  vertical-align: bottom;
+  margin: 0.5rem 0 1.5rem;
+}
+
+/* Swap in the light-text logo in Piccolo's dark modes. */
+img.only-dark,
+:root[data-mode="dark"] img.only-light,
+:root[data-mode="darkest"] img.only-light {
+  display: none;
+}
+
+:root[data-mode="dark"] img.only-dark,
+:root[data-mode="darkest"] img.only-dark {
+  display: block;
+}

@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scenezoo"
+dynamic = ["version"]
+description = "Read 3D indoor-scene datasets (ScanNet, ScanNet++, ARKitScenes, Matterport3D, ...) through one Python API."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Yiming Zhang" }]
+keywords = ["3D vision", "3D scenes", "datasets", "RGB-D", "point clouds", "ScanNet"]
+classifiers = [
+  "Natural Language :: English",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+
+dependencies = [
+  "fsspec[http]>=2023.1",
+  "numpy>=1.23",
+  "av>=15",
+  "cachetools>=5.3",
+  "lz4>=3.1",
+  "open3d>=0.19.0",
+  "plyfile",
+  "pandas>=2.0",
+  "Pillow>=9.1",
+  "scipy>=1.9",
+]
+
+[project.optional-dependencies]
+# PyTorch3D is also required; install it following its own instructions.
+render = [
+  "torch",
+]
+dev = [
+  "pytest>=7",
+  "ruff>=0.12,<0.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/eamonn-zh/scenezoo"
+Repository = "https://github.com/eamonn-zh/scenezoo"
+Documentation = "https://scenezoo.readthedocs.io/en/latest/"
+Issues = "https://github.com/eamonn-zh/scenezoo/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.dynamic]
+version = { attr = "scenezoo.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+scenezoo = [
+  "metadata/3rscan_semantic_mapping.csv",
+  "metadata/fixed_arkitscenes_direction.csv",
+  "metadata/multiscan_direction.csv",
+  "metadata/multiscan_*.csv",
+  "metadata/scannetv2_*.txt",
+  "metadata/structured3d_*.txt"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+markers = ["integration: tests requiring a real dataset root"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
