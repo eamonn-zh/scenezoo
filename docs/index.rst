@@ -17,7 +17,7 @@ NumPy arrays and Open3D objects, without writing a new loader for every
 dataset.
 
 .. image:: _static/teaser.jpg
-   :alt: RGB, depth, normals, rendered RGB, semantic segmentation, and the 3D scene with its camera trajectory, read from one ScanNet++ capture
+   :alt: RGB, depth, normals, and segmentation of one ScanNet++ frame; the rendered mesh; and the 3D mesh (textured and wireframe), camera trajectory, and 3D boxes
    :width: 100%
 
 .. code-block:: python

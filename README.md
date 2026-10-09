@@ -29,7 +29,7 @@ NumPy arrays and Open3D objects, without writing a new loader for every
 dataset.
 
 <p align="center">
-  <img alt="RGB, depth, normals, rendered RGB, semantic segmentation, and the 3D scene with its camera trajectory, read from one ScanNet++ capture" src="https://raw.githubusercontent.com/eamonn-zh/scenezoo/main/docs/_static/teaser.jpg" width="100%">
+  <img alt="RGB, depth, normals, and segmentation of one ScanNet++ frame; the rendered mesh; and the 3D mesh (textured and wireframe), camera trajectory, and 3D boxes" src="https://raw.githubusercontent.com/eamonn-zh/scenezoo/main/docs/_static/teaser.jpg" width="100%">
 </p>
 
 ## Installation
