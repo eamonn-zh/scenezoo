@@ -18,6 +18,7 @@ _PUBLIC_CLASSES = {
     "SceneNN": ("scenenn", "SceneNN"),
     "Structured3D": ("structured3d", "Structured3D"),
     "Structured3DPointData": ("structured3d", "Structured3DPointData"),
+    "ThreeDFront": ("threedfront", "ThreeDFront"),
     "ThreeRScan": ("threerscan", "ThreeRScan"),
 }
 

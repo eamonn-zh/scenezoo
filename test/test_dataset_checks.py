@@ -87,12 +87,15 @@ def test_s3dis_checker_reports_malformed_rooms(tmp_path):
     assert any(issue.code == "missing-areas" for issue in report.warnings)
 
 
-def test_structured3d_checker_requires_official_zip_extraction(tmp_path):
+def test_structured3d_checker_requires_official_zip_extraction(
+    tmp_path, structured3d_metadata
+):
     archive_path = tmp_path / "Structured3D_0.zip"
     with zipfile.ZipFile(archive_path, "w") as archive:
         archive.writestr("Structured3D/scene_00000/annotation_3d.json", "{}")
 
-    report = get_dataset("structured3d", tmp_path).check(sample_ids=("scene_00000",))
+    dataset = get_dataset("structured3d", tmp_path, **structured3d_metadata)
+    report = dataset.check(sample_ids=("scene_00000",))
     assert not report.ok
     assert report.stats["zip_shards_found"] == 1
     assert report.stats["extracted_scenes"] == 0

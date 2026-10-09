@@ -14,7 +14,9 @@ and instance and semantic annotations.
      - Scenes, for example ``scene0000_00``
    * - Splits
      - ``train`` (1,201), ``val`` (312), ``test`` (100); the official v2 lists
-       are installed with SceneZoo
+       are downloaded once from the ScanNet repository
+   * - Coordinates
+     - z-up, metres, as released; see :ref:`coordinate-system`
    * - Data
      - Meshes, vertex segmentation, boxes, RGB-D frames with 2D labels and IMU
 

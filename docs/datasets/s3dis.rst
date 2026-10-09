@@ -15,6 +15,8 @@ labels.
      - Rooms, for example ``Area_5/office_1``
    * - Splits
      - ``area_1`` to ``area_6``; see `Area folds`_
+   * - Coordinates
+     - z-up, metres, as released; see :ref:`coordinate-system`
    * - Data
      - Point clouds with RGB, point segmentation, boxes (no meshes or camera
        frames)

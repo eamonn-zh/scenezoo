@@ -13,6 +13,8 @@ About 100 reconstructed indoor scenes with per-vertex instance annotations.
      - Scenes, for example ``005``
    * - Splits
      - None (no official split); ``get_ids()`` lists every scene
+   * - Coordinates
+     - y-up in the release; rotated to z-up (metres); see :ref:`coordinate-system`
    * - Data
      - Meshes and vertex instance segmentation
 
@@ -50,7 +52,8 @@ Meshes and labels
 -----------------
 
 - ``get_mesh`` returns the ``"raw"`` colored mesh (default) or the
-  ``"instance"`` mesh colored by object.
+  ``"instance"`` mesh colored by object. SceneNN meshes are y-up; both are
+  rotated to z-up (see :ref:`coordinate-system`).
 - ``get_segmentation`` returns per-vertex instance IDs and names. The release
   identifies objects by color in the instance mesh; SceneZoo matches those
   colors to the labels in the XML file. Unlabeled vertices get

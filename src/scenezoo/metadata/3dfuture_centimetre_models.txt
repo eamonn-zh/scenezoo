@@ -1,0 +1,49 @@
+# 3D-FUTURE models whose raw_model.obj is in centimetres instead of metres.
+# Found by comparing each model's extent with the furniture size recorded in
+# the 3D-FRONT house JSONs of the latest release (2022-01): for these models
+# it is about 100 times larger in every house that places them.
+# 3D-FUTURE-model release of 2021-04; one model ID per line.
+011b01ee-dd87-451d-96a4-d4b8b1af5a3d
+0590988e-aad9-39e2-b613-b9787ecdfa52
+05e1e090-8fc0-357a-9ad2-19c4289c6058
+07d38cfb-dcb0-3f0c-96d1-69f465ebb40d
+09379704-5da1-36b4-9eff-3a68424e2d91
+09fab2ad-8561-3fa8-a512-d1737f573b3d
+0da2a2ff-fd2d-3cd3-8dc9-9303c7a80814
+12b1ce0f-3d2a-3211-9e05-a537e5a43e20
+189b4c48-c93e-31ac-be11-087e861f5b86
+206d272e-e0ce-3339-b7b7-a459ce2ada73
+23477dce-20f9-340e-bebf-3dfaeb71b6b4
+256e7cf1-9533-371f-b5d8-fef1ce0959bb
+2a7ad7b0-dc8b-4e72-b58d-fabb41a48cc7
+2fb6e466-5020-36b4-825a-7c11d1a2ff90
+31fc0baf-3bbc-360f-aaa2-e21d4b26eca4
+3328d309-b3d5-301f-8537-f52409f35906
+33c25d3a-2758-4fde-936d-a4665a606318
+34a5b5b4-b2fd-3bc6-8637-561616a163a6
+39057a21-0a68-3494-8522-2e473dd6a38f
+3f344705-6b64-4725-ba82-f498b9e44f1e
+43af331b-5743-38a3-a6f0-dd927378bcbb
+523d0df7-e1a7-3d3e-afad-7ebae91903b7
+54bdc70d-0304-3e7d-a159-ff86cfa54871
+56543761-9ef8-34c7-84ad-32c8bf20790f
+58a4a8c3-3c68-396d-8e3d-b357a2eec0c8
+5989c278-074e-3d9c-979c-05d6a4bcd3de
+5e093f91-25c1-3185-afc2-f63093a88948
+5e7c487b-1d01-3020-86b6-d776a24c87cd
+68996a70-1878-3e70-ad1a-86eaadd71b5c
+6914bc9b-d7f3-3d85-9fdf-a8e30b54ed35
+6c396365-d75c-4f31-b14c-1a96e88261dd
+6e45e554-7bc1-304d-a333-26ea6271e6b0
+70b85202-1ead-30c9-a687-1013a0f0e452
+70e2459b-41a9-38c2-81a1-efc9e7e76dfd
+728b2ef4-01aa-30e0-83e8-571e4ea6cc8a
+79b58fc0-c0df-3405-ad20-8c3d51581bb6
+7a07c30a-d0da-3f97-9141-41a6d4fa16ba
+7b16d703-fcd4-4078-9b0b-5b0df2fedc1b
+7e101ef3-7722-4af8-90d5-7c562834fabd
+7e908bee-db00-36aa-9883-77e8fdfed531
+7f5c54b7-fa80-3d2d-b420-2f1fe3702427
+81bfea92-9a56-38eb-8bb2-ffa5b572fbc1
+827a7bf0-21fe-342d-ba2a-a29246d30d43
+986a7091-335d-4ad8-9844-1252049970c6

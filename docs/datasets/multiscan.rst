@@ -13,8 +13,10 @@ parts, and how parts move (articulations).
    * - Samples
      - Scans, for example ``scene_00000_00`` (scene 0, scan 0)
    * - Splits
-     - ``train``, ``val``, ``test``; the official list is installed with
-       SceneZoo
+     - ``train``, ``val``, ``test``; the official list is downloaded once from
+       the MultiScan repository
+   * - Coordinates
+     - z-up, metres, as released; see :ref:`coordinate-system`
    * - Data
      - Meshes, face segmentation of objects and parts, boxes, articulations,
        RGB-D frames with confidence
@@ -116,8 +118,8 @@ API reference
 **Options.** File templates are stored in ``mesh_files``, ``annotation_file``,
 ``rgb_video_file``, ``depth_file``, ``confidence_file``, ``alignment_file``,
 ``camera_metadata_file``, and ``camera_file``. ``split_file``,
-``object_label_file``, and ``part_label_file`` default to copies included in
-SceneZoo.
+``object_label_file``, and ``part_label_file`` default to the official files
+in the MultiScan repository, downloaded once and cached.
 
 .. list-table::
    :header-rows: 1

@@ -15,6 +15,8 @@ meshes, room (region) and object annotations, and calibrated images.
        with ``region_id``
    * - Splits
      - ``train`` (61), ``val`` (11), ``test`` (18)
+   * - Coordinates
+     - z-up, metres, as released; see :ref:`coordinate-system`
    * - Data
      - House, room, and Poisson meshes; face segmentation in four label spaces;
        annotated object boxes; raw and undistorted RGB-D images
@@ -96,10 +98,18 @@ returns the original distorted images with ``camera_model="OPENCV"`` and the
 coefficients ``(k1, k2, p1, p2, k3)`` in ``distortion``. Both return depth in
 metres and poses as OpenCV ``world_to_camera`` matrices.
 
+The undistorted source also returns ``normal_maps``: the official normals
+estimated from the undistorted depth, upsampled to the image size and converted
+to OpenCV camera axes.
+
 Frame indices number the images of a house in a fixed order;
 ``get_frame_keys(house_id)`` returns their official file names, and
 ``get_frame_sources(house_id)`` lists the downloaded sources. Matterport images
 are already upright, so ``rotate_to_up`` has no effect.
+
+``get_panorama_ids(house_id)`` lists the tripod positions, and
+``get_skybox_images(house_id, panorama_id)`` returns the six official skybox
+faces of one of them, in file order, as a ``(6, H, W, 3)`` array.
 
 Official resources
 ------------------
@@ -115,7 +125,8 @@ API reference
 
 **Options.** ``scans_dir`` is the detected scans folder. Bundle folder
 templates are stored in ``mesh_dir``, ``house_segmentation_dir``,
-``region_segmentation_dir``, ``poisson_dir``, and ``frame_dirs``.
+``region_segmentation_dir``, ``poisson_dir``, ``skybox_dir``, and
+``frame_dirs``.
 ``label_mapping_file`` and ``split_files`` locate the category mapping and
 split lists.
 
@@ -135,6 +146,8 @@ split lists.
      - Annotated object boxes.
    * - ``get_house_info``
      - Parsed ``.house`` file.
+   * - ``get_panorama_ids``, ``get_skybox_images``
+     - Panorama IDs; the six skybox faces of a panorama.
    * - ``get_frames``, ``get_frame_keys``, ``get_frame_sources``
      - RGB-D images and cameras; image names; downloaded sources.
 

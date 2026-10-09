@@ -10,6 +10,7 @@ import pytest
 from PIL import Image
 
 import scenezoo.dataset.scene.matterport3d as matterport_module
+from scenezoo import UnsupportedOperationError
 from scenezoo.dataset.scene import Matterport3D
 
 
@@ -204,6 +205,21 @@ def matterport_root(tmp_path):
         {"pano_d0_0.png": _png(depth0), "pano_d0_1.png": _png(depth1)},
     )
 
+    # Normals at half resolution, 32768 * (1 + n), in OpenGL camera axes:
+    # n = (0, 0, 1) points back at the camera.
+    unit = np.full((1, 1), 32768, np.uint16)
+    _write_files(
+        scene / "undistorted_normal_images",
+        {
+            "pano_d0_1_nx.png": _png(unit),
+            "pano_d0_1_ny.png": _png(unit),
+            "pano_d0_1_nz.png": _png(np.full((1, 1), 65535, np.uint16)),
+        },
+    )
+    _write_files(
+        scene / "matterport_skybox_images",
+        {f"pano_skybox{face}_sami.jpg": _png(rgb0 + face) for face in range(6)},
+    )
     _write_files(scene / "matterport_color_images", {"raw_i0_0.jpg": _png(rgb0)})
     _write_files(scene / "matterport_depth_images", {"raw_d0_0.png": _png(depth0)})
     _write_files(scene / "matterport_camera_poses", {"raw_pose_0_0.txt": identity})
@@ -366,3 +382,23 @@ def test_zip_bundle_requires_extraction(matterport_root):
     assert any(issue.code == "archives-need-extraction" for issue in report.warnings)
     with pytest.raises(FileNotFoundError, match="not extracted"):
         dataset.get_frames("scene", source="raw", items=("rgb",))
+
+
+def test_undistorted_normal_maps_use_opencv_camera_axes(matterport_root):
+    dataset = _dataset(matterport_root)
+    frames = dataset.get_frames(
+        "scene", source="undistorted", indices=[1], items=("depth", "normal_maps")
+    )
+    # Upsampled to the 2x2 image; OpenGL (0, 0, 1) is OpenCV (0, 0, -1).
+    assert frames.normal_maps.shape == (1, 2, 2, 3)
+    np.testing.assert_allclose(frames.normal_maps[0, 1, 1], [0, 0, -1], atol=1e-4)
+    with pytest.raises(UnsupportedOperationError):
+        dataset.get_frames("scene", source="raw", items=("normal_maps",))
+
+
+def test_skybox_images_per_panorama(matterport_root):
+    dataset = _dataset(matterport_root)
+    assert dataset.get_panorama_ids("scene") == ["pano"]
+    faces = dataset.get_skybox_images("scene", "pano")
+    assert faces.shape[0] == 6 and faces.shape[-1] == 3
+    assert faces.dtype == np.uint8

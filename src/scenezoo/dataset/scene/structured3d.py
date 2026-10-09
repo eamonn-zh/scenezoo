@@ -5,7 +5,6 @@ from __future__ import annotations
 import io
 import json
 import re
-from importlib.resources import files
 from pathlib import Path
 from typing import Iterable, Sequence
 
@@ -84,6 +83,10 @@ STRUCTURED3D_CLASS_NAMES_25 = (
     "otherprop",
 )
 
+# Official metadata files, downloaded once and cached.
+_METADATA_URL = (
+    "https://raw.githubusercontent.com/bertjiazheng/Structured3D/master/metadata/"
+)
 _SCENE_PATTERN = re.compile(r"^scene_([0-9]{5})$")
 _ROOM_PATTERN = re.compile(r"^[0-9]+$")
 # Instance renderings mark background pixels with the maximum uint16 value.
@@ -140,9 +143,9 @@ class Structured3D(Dataset):
         root_dir,
         *,
         data_dir=None,
-        room_type_file=None,
-        label_name_file=None,
-        errata_file=None,
+        room_type_file=_METADATA_URL + "room_types.txt",
+        label_name_file=_METADATA_URL + "labelids.txt",
+        errata_file=_METADATA_URL + "errata.txt",
         include_invalid=True,
         cache_dir=None,
         offline=False,
@@ -154,11 +157,10 @@ class Structured3D(Dataset):
             offline=offline,
             invalid_obj_id=invalid_obj_id,
         )
-        metadata = files("scenezoo.metadata")
         self.dataset_root = self._resolve_dataset_root(data_dir)
-        self.room_type_file = room_type_file or metadata / "structured3d_room_types.txt"
-        self.label_name_file = label_name_file or metadata / "structured3d_labelids.txt"
-        self.errata_file = errata_file or metadata / "structured3d_errata.txt"
+        self.room_type_file = room_type_file
+        self.label_name_file = label_name_file
+        self.errata_file = errata_file
         self.include_invalid = bool(include_invalid)
         self._store = Structured3DStore(self.root_dir, data_dir)
         self._box_label_cache = LRUCache(maxsize=16)
@@ -752,6 +754,14 @@ class Structured3D(Dataset):
                 batch = batch.astype(np.int32)
             elif item == "normal_maps":
                 batch = np.clip(batch.astype(np.float32) / 128.0 - 1.0, -1.0, 1.0)
+                # Rotate the official camera axes to OpenCV (x right, y down,
+                # z forward); measured against normals derived from depth.
+                if source == "perspective":
+                    batch = batch * np.array([1.0, -1.0, 1.0], np.float32)
+                else:
+                    batch = np.stack(
+                        (-batch[..., 2], -batch[..., 1], batch[..., 0]), axis=-1
+                    )
             values[item] = batch
 
         cameras = []

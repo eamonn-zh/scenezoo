@@ -35,6 +35,10 @@ from ..types import FrameBatch, Segmentation3D
 
 
 ROTATION_BY_SKY_DIRECTION = {"Up": 0, "Left": 270, "Right": 90, "Down": 180}
+# Official benchmark split and label maps, downloaded once and cached.
+_BENCHMARK_URL = (
+    "https://raw.githubusercontent.com/smartscenes/multiscan/main/dataset/benchmark/"
+)
 _SEGMENTATION_TYPES = {
     "object_instance",
     "part_instance",
@@ -71,9 +75,9 @@ class MultiScan(Dataset):
         alignment_file="{scene_id}/{scene_id}.align.json",
         camera_metadata_file="{scene_id}/{scene_id}.jsonl",
         camera_file="{scene_id}/{scene_id}.json",
-        split_file=None,
-        object_label_file=None,
-        part_label_file=None,
+        split_file=_BENCHMARK_URL + "scans_split.csv",
+        object_label_file=_BENCHMARK_URL + "object_semantic_label_map.csv",
+        part_label_file=_BENCHMARK_URL + "part_semantic_label_map.csv",
         invalid_obj_id=0,
         cache_dir=None,
         offline=False,
@@ -84,7 +88,6 @@ class MultiScan(Dataset):
             offline=offline,
             invalid_obj_id=invalid_obj_id,
         )
-        metadata = files("scenezoo.metadata")
         self.mesh_files = {"ply": ply_mesh_file, "textured": obj_mesh_file}
         self.annotation_file = annotation_file
         self.rgb_video_file = rgb_video_file
@@ -93,13 +96,9 @@ class MultiScan(Dataset):
         self.alignment_file = alignment_file
         self.camera_metadata_file = camera_metadata_file
         self.camera_file = camera_file
-        self.split_file = split_file or metadata / "multiscan_scans_split.csv"
-        self.object_label_file = (
-            object_label_file or metadata / "multiscan_object_semantic_label_map.csv"
-        )
-        self.part_label_file = (
-            part_label_file or metadata / "multiscan_part_semantic_label_map.csv"
-        )
+        self.split_file = split_file
+        self.object_label_file = object_label_file
+        self.part_label_file = part_label_file
 
     @cached_property
     def _split_table(self):

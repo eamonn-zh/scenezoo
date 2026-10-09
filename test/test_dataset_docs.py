@@ -20,6 +20,7 @@ DATASETS = {
     "scenenn": ("scenenn.py", "SceneNN"),
     "structured3d": ("structured3d.py", "Structured3D"),
     "3rscan": ("threerscan.py", "ThreeRScan"),
+    "3dfront": ("threedfront.py", "ThreeDFront"),
 }
 
 

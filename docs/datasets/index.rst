@@ -1,9 +1,11 @@
 Datasets
 ========
 
-SceneZoo supports ten indoor-scene datasets. Each page below explains the
-expected download layout, the data you can load, and the dataset's own options
-and extra methods.
+SceneZoo currently has built-in adapters for the indoor-scene datasets below.
+Each page explains the expected download layout, the data you can load, and
+the dataset's own options and extra methods. Other datasets can be registered
+locally and then used through the same API; see
+:doc:`../guide/custom_datasets`.
 
 .. list-table::
    :header-rows: 1
@@ -62,7 +64,7 @@ and extra methods.
      -
      - face
      - annotated
-     - RGB-D (raw and undistorted)
+     - RGB-D (raw and undistorted), normal maps
    * - :doc:`SceneNN <scenenn>` (``scenenn``)
      - yes
      -
@@ -75,6 +77,12 @@ and extra methods.
      - point
      - annotated
      - rendered RGB-D, panoramas
+   * - :doc:`3D-FRONT <3dfront>` (``3dfront``)
+     - textured
+     -
+     - face
+     - from placement
+     -
 
 "Fitted" boxes are computed from annotated objects; "annotated" boxes are
 published with the dataset (``box_type="obb_gt"``). The label *domains*
@@ -91,6 +99,7 @@ Which dataset should I use?
 - **Scene changes over time:** 3RScan.
 - **Synthetic data with perfect labels:** Structured3D and Aria Synthetic
   Environments.
+- **Designed, furnished houses with textured CAD furniture:** 3D-FRONT.
 
 .. toctree::
    :hidden:
@@ -105,3 +114,4 @@ Which dataset should I use?
    matterport3d
    scenenn
    structured3d
+   3dfront

@@ -199,9 +199,11 @@ def test_multiscan_rejects_android_depth_encoding(tmp_path):
         )
 
 
-def test_multiscan_all_segmentations_articulations_and_alignment(tmp_path):
+def test_multiscan_all_segmentations_articulations_and_alignment(
+    tmp_path, multiscan_metadata
+):
     scene = _write_multiscan_fixture(tmp_path)
-    dataset = MultiScan(tmp_path)
+    dataset = MultiScan(tmp_path, **multiscan_metadata)
     assert dataset.get_segmentation(scene).labels.tolist() == [1, 0]
     assert dataset.get_segmentation(
         scene, segmentation_type="part_instance"
@@ -222,15 +224,17 @@ def test_multiscan_all_segmentations_articulations_and_alignment(tmp_path):
     boxes, names = dataset.get_boxes(scene, box_type="obb_gt")
     assert set(boxes) == set(names) == {1}
 
-    custom_invalid = MultiScan(tmp_path, invalid_obj_id=-1)
+    custom_invalid = MultiScan(tmp_path, invalid_obj_id=-1, **multiscan_metadata)
     assert custom_invalid.get_segmentation(scene).labels.tolist() == [1, -1]
     assert custom_invalid.get_segmentation(
         scene, segmentation_type="object_semantic"
     ).labels.tolist() == [7, -1]
 
 
-def test_multiscan_bundled_splits_and_alias_preserving_metadata(tmp_path):
-    dataset = MultiScan(tmp_path, offline=True)
+def test_multiscan_official_splits_and_alias_preserving_metadata(
+    tmp_path, multiscan_metadata
+):
+    dataset = MultiScan(tmp_path, offline=True, **multiscan_metadata)
     assert sorted(dataset.splits) == ["test", "train", "val"]
     assert sum(len(ids) for ids in dataset.splits.values()) == 257
     assert len(dataset.get_ids()) == 273  # includes 16 scans with no split

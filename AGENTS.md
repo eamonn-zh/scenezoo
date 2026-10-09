@@ -21,7 +21,10 @@
 - `src/scenezoo/io/`: file access (`cache.py`, `archive.py`, `sens.py`,
   `video.py`, ...). `src/scenezoo/ops/`: frame transforms, geometry, and
   annotation parsers. Both namespaces export helpers lazily.
-- `src/scenezoo/metadata/`: packaged split lists, label maps, and corrections.
+- `src/scenezoo/metadata/`: only SceneZoo's own corrections to official data.
+  Files that an official repository or download already provides (split
+  lists, label maps, errata) are fetched from there with `open_file` and
+  cached; never copy them into the package.
 
 ## Conventions that must hold
 - Frames: depth is `float32` metres (invalid = 0); poses are OpenCV

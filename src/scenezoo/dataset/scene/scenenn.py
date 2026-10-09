@@ -13,6 +13,9 @@ from ..base import DataFormatError, Dataset
 from ..registry import register_dataset
 from ..types import Segmentation3D
 
+# SceneNN meshes are y-up; SceneZoo returns z-up: (x, y, z) -> (x, -z, y).
+_Y_UP_TO_Z_UP = np.array([[1.0, 0, 0], [0, 0, -1], [0, 1, 0]])
+
 
 @register_dataset(
     "scenenn",
@@ -130,24 +133,27 @@ class SceneNN(Dataset):
         return {"room_categories": categories}
 
     def get_mesh(self, sample_id, *, mesh_type=None):
+        """Return the ``"raw"`` colored mesh (default) or the ``"instance"`` mesh, z-up."""
+
         mesh_type = mesh_type or "raw"
         instance_path = self.root_dir / self.instance_mesh_file.format(
             scene_id=sample_id
         )
         if mesh_type == "instance":
-            return load_triangle_mesh(instance_path)
-        if mesh_type != "raw":
-            raise ValueError(f"Unknown SceneNN mesh type: {mesh_type!r}")
-        mesh = load_triangle_mesh(
-            self.root_dir / self.raw_mesh_file.format(scene_id=sample_id)
-        )
-        instance_mesh = load_triangle_mesh(instance_path)
-        if len(mesh.vertices) != len(instance_mesh.vertices):
-            raise DataFormatError(
-                "SceneNN raw and instance meshes have different vertex counts and cannot be aligned."
+            mesh = load_triangle_mesh(instance_path)
+        elif mesh_type == "raw":
+            mesh = load_triangle_mesh(
+                self.root_dir / self.raw_mesh_file.format(scene_id=sample_id)
             )
-        mesh.vertices = instance_mesh.vertices
-        return mesh
+            instance_mesh = load_triangle_mesh(instance_path)
+            if len(mesh.vertices) != len(instance_mesh.vertices):
+                raise DataFormatError(
+                    "SceneNN raw and instance meshes have different vertex counts and cannot be aligned."
+                )
+            mesh.vertices = instance_mesh.vertices
+        else:
+            raise ValueError(f"Unknown SceneNN mesh type: {mesh_type!r}")
+        return mesh.rotate(_Y_UP_TO_Z_UP, center=(0, 0, 0))
 
     def _read_annotations(self, sample_id):
         path = self.root_dir / self.annotation_file.format(scene_id=sample_id)

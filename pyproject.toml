@@ -65,13 +65,11 @@ version = { attr = "scenezoo.__version__" }
 where = ["src"]
 
 [tool.setuptools.package-data]
+# Only SceneZoo's own corrections; official metadata is downloaded on first use.
 scenezoo = [
-  "metadata/3rscan_semantic_mapping.csv",
+  "metadata/3dfuture_centimetre_models.txt",
   "metadata/fixed_arkitscenes_direction.csv",
-  "metadata/multiscan_direction.csv",
-  "metadata/multiscan_*.csv",
-  "metadata/scannetv2_*.txt",
-  "metadata/structured3d_*.txt"
+  "metadata/multiscan_direction.csv"
 ]
 
 [tool.pytest.ini_options]

@@ -16,6 +16,8 @@ renderings, dense 2D labels, 3D room-layout annotations, and object boxes.
    * - Splits
      - ``train`` (scenes 0--2999), ``val`` (3000--3249), ``test``
        (3250--3499)
+   * - Coordinates
+     - z-up; millimetres in the release, converted to metres; see :ref:`coordinate-system`
    * - Data
      - Room-layout meshes, point clouds fused from renderings, point
        segmentation, object boxes, rendered RGB-D views with 2D labels
@@ -76,7 +78,7 @@ lists what is available:
 - ``lighting`` is ``"raw"`` (default) or, for panoramas, ``"cold"`` or
   ``"warm"``.
 - Items include ``rgb``, ``depth`` (metres), ``albedo``, ``normal_maps``
-  (unit vectors), ``semantic_maps`` and ``instance_maps`` (instance background
+  (unit vectors, converted to OpenCV camera axes), ``semantic_maps`` and ``instance_maps`` (instance background
   is ``65535``), intrinsics (perspective only), and ``world_to_camera``.
 
 Scenes are rendered upright, so ``rotate_to_up`` has no effect.
@@ -125,7 +127,8 @@ API reference
 
 **Options.** ``dataset_root`` is the resolved folder of scene directories
 (``data_dir`` overrides it). ``room_type_file``, ``label_name_file``, and
-``errata_file`` default to copies installed with SceneZoo, and
+``errata_file`` default to the official files in the Structured3D
+repository, downloaded once and cached, and
 ``include_invalid=False`` drops the invalid scenes from the splits.
 
 .. list-table::

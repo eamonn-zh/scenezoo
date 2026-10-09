@@ -43,7 +43,11 @@ from ..types import FrameBatch, Segmentation3D
 _DEFAULT_LABEL_MAP_URL = (
     "https://kaldir.vc.in.tum.de/scannet/v2/tasks/scannetv2-labels.combined.tsv"
 )
-_PACKAGED_SPLIT_DIR = Path(__file__).resolve().parents[2] / "metadata"
+# Official split lists, downloaded once and cached.
+_SPLIT_URL = (
+    "https://raw.githubusercontent.com/ScanNet/ScanNet/master/"
+    "Tasks/Benchmark/scannetv2_{split}.txt"
+)
 _INTEGER_INFO_FIELDS = {
     "colorHeight",
     "colorWidth",
@@ -133,7 +137,7 @@ class ScanNet(Dataset):
         splits = {}
         for split, source in self.split_files.items():
             if source is None:
-                source = _PACKAGED_SPLIT_DIR / f"scannetv2_{split}.txt"
+                source = _SPLIT_URL.format(split=split)
             with self.open_file(self._root_source(source), "r") as handle:
                 splits[split] = [line for line in handle.read().splitlines() if line]
         return splits

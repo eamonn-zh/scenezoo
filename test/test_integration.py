@@ -21,6 +21,7 @@ from scenezoo import UnsupportedOperationError, get_dataset
         ("matterport3d", "SCENEZOO_TEST_MATTERPORT3D_ROOT"),
         ("scenenn", "SCENEZOO_TEST_SCENENN_ROOT"),
         ("s3dis", "SCENEZOO_TEST_S3DIS_ROOT"),
+        ("3dfront", "SCENEZOO_TEST_3DFRONT_ROOT"),
     ],
 )
 def test_configured_dataset_smoke(name, variable):
@@ -51,10 +52,10 @@ def test_configured_dataset_smoke(name, variable):
 
 
 def _first_sample(dataset):
-    for ids in dataset.splits.values():
-        if ids:
-            return ids[0]
-    pytest.skip("Every split of the configured dataset root is empty")
+    ids = dataset.get_ids()
+    if not ids:
+        pytest.skip("The configured dataset root has no samples")
+    return ids[0]
 
 
 @pytest.mark.integration
@@ -546,3 +547,35 @@ def test_configured_structured3d_complete_sources():
     )
     assert len(points) == len(segmentation.labels)
     assert segmentation.domain == "point"
+
+
+@pytest.mark.integration
+def test_configured_3dfront_house_rooms_labels_and_boxes():
+    root = os.getenv("SCENEZOO_TEST_3DFRONT_ROOT")
+    if not root:
+        pytest.skip("SCENEZOO_TEST_3DFRONT_ROOT is not configured")
+    dataset = get_dataset("3dfront", root, offline=True)
+    sample_id = dataset.get_ids()[0]
+    assert dataset.check(sample_ids=(sample_id,)).ok
+
+    mesh = dataset.get_mesh(sample_id)
+    vertices = np.asarray(mesh.vertices)
+    # z-up: the house is far wider than it is tall, and the floor sits near z=0.
+    extent = vertices.max(0) - vertices.min(0)
+    assert extent[2] < min(extent[:2]) and abs(np.percentile(vertices[:, 2], 1)) < 0.5
+    assert len(mesh.textures) > 1
+    assert len(mesh.triangle_material_ids) == len(mesh.triangles)
+
+    instance = dataset.get_segmentation(sample_id)
+    semantic = dataset.get_segmentation(sample_id, segmentation_type="semantic")
+    assert len(instance.labels) == len(semantic.labels) == len(mesh.triangles)
+    classes = dataset.metadata["semantic_classes"]["category"]
+    assert "Floor" in {classes[i] for i in np.unique(semantic.labels)}
+
+    boxes, names = dataset.get_boxes(sample_id)
+    assert set(boxes) == set(names) == set(instance.id_to_name)
+    room_id = dataset.get_room_ids(sample_id)[0]
+    room = dataset.get_mesh(sample_id, room_id=room_id)
+    assert len(dataset.get_segmentation(sample_id, room_id=room_id).labels) == len(
+        room.triangles
+    )

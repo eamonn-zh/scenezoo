@@ -16,6 +16,8 @@ object boxes, high-resolution depth, and registered laser scans.
      - ``train_raw``, ``val_raw``, ``train_threedod``, ``val_threedod``,
        ``train_depth_upsampling``, ``val_depth_upsampling``: the official
        Training and Validation lists of each of the three releases
+   * - Coordinates
+     - z-up, metres, as released; see :ref:`coordinate-system`
    * - Data
      - Meshes, box-derived vertex segmentation, 3D boxes, RGB-D frames from six
        camera sources, laser scans

@@ -77,6 +77,9 @@ own naming:
    * - Structured3D
      - ``scene_00000``
      - ``train``, ``val``, ``test``
+   * - 3D-FRONT
+     - house UUID
+     - none
 
 Splits are the official ones, under their official names; SceneZoo adds none
 of its own. ``dataset.splits`` is a dictionary of them, ``dataset.get_ids(split)``
@@ -84,6 +87,27 @@ returns one, and ``dataset.get_ids()`` returns every sample of the release,
 including any that the official splits leave out. These lists may include
 scenes you have not downloaded; use :doc:`dataset.check() <checking>` to find
 out what is present.
+
+.. _coordinate-system:
+
+Coordinate system
+-----------------
+
+All scene data uses one world convention, whichever dataset it comes from:
+
+- **z-up, in metres.** Meshes, point clouds, boxes, and camera poses share a
+  right-handed world frame in which +Z points up, against gravity, so floors
+  lie in an XY plane.
+- **Datasets that are not z-up are rotated on read.** 3D-FRONT and SceneNN are
+  y-up in their release; SceneZoo rotates them with
+  ``(x, y, z) -> (x, -z, y)``. The rotation is applied the same way by every
+  operation, so meshes, labels, boxes, and cameras stay consistent. The other
+  datasets are already z-up and are returned as released.
+- **Only the up axis is fixed.** The origin and the horizontal axes stay as
+  released. Some datasets also provide an alignment to the room's walls, for
+  example ScanNet's ``get_alignment``.
+
+Each dataset page states the source convention.
 
 The five standard operations
 ----------------------------
@@ -149,7 +173,7 @@ attached to through ``domain``:
      - ScanNet, ScanNet++, ARKitScenes, 3RScan, SceneNN
    * - ``"face"``
      - ``mesh.triangles[i]`` of ``get_mesh()``
-     - MultiScan, Matterport3D
+     - MultiScan, Matterport3D, 3D-FRONT
    * - ``"point"``
      - ``points.xyz[i]`` of ``get_points()``
      - S3DIS, Structured3D
@@ -247,11 +271,13 @@ arguments raise :class:`ValueError`.
 Cache and offline use
 ---------------------
 
-A few adapters read small metadata files that are not part of every download,
-such as ScanNet's label map, Matterport3D's split lists, or the 3RScan index.
-They are downloaded from the official location on first use and cached in
-``~/.cache/scenezoo`` (or ``$SCENEZOO_CACHE_DIR`` if set). Many adapters
-also ship these files inside the package and need no download at all.
+Some adapters read small official metadata files that are not part of every
+download, such as split lists, label maps, or the 3RScan index. They are
+downloaded from the official repository on first use and cached in
+``~/.cache/scenezoo`` (or ``$SCENEZOO_CACHE_DIR`` if set). SceneZoo itself
+ships only its own corrections to the official data (for example image
+directions for ARKitScenes and MultiScan, and the 3D-FUTURE models stored in
+centimetres).
 
 - ``get_dataset(..., offline=True)`` never accesses the network; it uses the
   cache and fails with a clear error if a file was never downloaded.

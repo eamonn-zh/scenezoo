@@ -253,7 +253,7 @@ BUILTIN_DATASETS = (
                 ),
                 FrameSourceSpec(
                     "undistorted",
-                    _RGBD_ITEMS,
+                    _RGBD_ITEMS + ("normal_maps",),
                     ("PINHOLE",),
                 ),
             ),
@@ -308,6 +308,20 @@ BUILTIN_DATASETS = (
                     ("room_id",),
                 ),
             ),
+        ),
+    },
+    {
+        "name": "3dfront",
+        "aliases": ("3d-front",),
+        "import_path": "scenezoo.dataset.scene.threedfront:ThreeDFront",
+        "description": "3D-FRONT houses with 3D-FUTURE furniture, rooms, and labels.",
+        "spec": DatasetSpec(
+            sample_unit="house",
+            operations=("mesh", "segmentation", "boxes"),
+            mesh_types=("full", "layout", "furniture"),
+            segmentation_types=("instance", "semantic"),
+            box_types=("obb_gt", "aabb", "obb", "mobb", "mobb_gravity"),
+            label_spaces=("category", "super_category"),
         ),
     },
 )

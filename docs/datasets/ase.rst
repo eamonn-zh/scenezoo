@@ -15,6 +15,8 @@ semi-dense SLAM points, and a procedural description of each room layout.
      - Sequences, named by split and number, for example ``train/83788``
    * - Splits
      - ``train``, ``test`` (extracted sequences only)
+   * - Coordinates
+     - z-up, metres, as released; see :ref:`coordinate-system`
    * - Data
      - Semi-dense points, wall/door/window layout boxes, fisheye RGB-D frames
        with instance images and poses (no meshes or 3D segmentation)

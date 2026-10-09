@@ -6,7 +6,6 @@ import copy
 import io
 import json
 from functools import cached_property
-from importlib.resources import files
 from pathlib import Path
 
 from cachetools import LRUCache, cachedmethod
@@ -40,6 +39,14 @@ from ..types import FrameBatch, Segmentation3D
 
 
 _DATASET_METADATA_URL = "https://campar.in.tum.de/public_datasets/3RScan/3RScan.json"
+# 3DSSG scene graphs (objects with attributes, and relationships), published
+# by the 3RScan authors; downloaded once and cached.
+_SCENE_GRAPH_URL = "https://campar.in.tum.de/public_datasets/3DSSG/3DSSG/{name}.json"
+# The official class mapping, a Google Sheet linked from the 3RScan repository.
+_LABEL_MAPPING_URL = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1eRTJ2M9OHz7ypXfYD-KTR1AIT-CrVLmhJf8mxgVZWnI/export?format=csv"
+)
 _SEMANTIC_ATTRIBUTES = {
     "global": "globalId",
     "nyu40": "NYU40",
@@ -78,7 +85,9 @@ class ThreeRScan(Dataset):
         oversegmentation_file="{scene_id}/mesh.refined.0.010000.segs.json",
         sequence_archive="{scene_id}/sequence.zip",
         dataset_metadata_file=None,
-        label_mapping_file=None,
+        label_mapping_file=_LABEL_MAPPING_URL,
+        scene_graph_objects_file=_SCENE_GRAPH_URL.format(name="objects"),
+        scene_graph_relationships_file=_SCENE_GRAPH_URL.format(name="relationships"),
         invalid_obj_id=0,
         cache_dir=None,
         offline=False,
@@ -105,10 +114,11 @@ class ThreeRScan(Dataset):
         self.dataset_metadata_file = (
             dataset_metadata_file or self._find_dataset_metadata()
         )
-        self.label_mapping_file = (
-            label_mapping_file
-            or files("scenezoo.metadata") / "3rscan_semantic_mapping.csv"
-        )
+        self.label_mapping_file = label_mapping_file
+        self.scene_graph_files = {
+            "objects": scene_graph_objects_file,
+            "relationships": scene_graph_relationships_file,
+        }
         self._sequence_info_cache = LRUCache(maxsize=64)
 
     def _find_dataset_metadata(self):
@@ -373,6 +383,47 @@ class ThreeRScan(Dataset):
                 v["is_reference"] for v in self._dataset_index.values()
             ),
         }
+
+    @cached_property
+    def _scene_graphs(self) -> dict[str, dict]:
+        graphs: dict[str, dict] = {}
+        try:
+            with self.open_file(self.scene_graph_files["objects"], "r") as handle:
+                for scan in json.load(handle)["scans"]:
+                    objects = {int(o["id"]): dict(o) for o in scan["objects"]}
+                    for record in objects.values():
+                        record.pop("id")
+                    graphs[str(scan["scan"])] = {
+                        "objects": objects,
+                        "relationships": [],
+                    }
+            with self.open_file(self.scene_graph_files["relationships"], "r") as handle:
+                for scan in json.load(handle)["scans"]:
+                    graph = graphs.setdefault(
+                        str(scan["scan"]), {"objects": {}, "relationships": []}
+                    )
+                    graph["relationships"] = [
+                        (int(a), int(b), int(p), str(name))
+                        for a, b, p, name in scan["relationships"]
+                    ]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise DataFormatError("Invalid 3DSSG scene graph files.") from exc
+        return graphs
+
+    def get_scene_graph(self, sample_id: str) -> dict:
+        """Return the 3DSSG scene graph of a scan.
+
+        ``objects`` maps instance IDs (as in ``get_segmentation``) to their label,
+        attributes, and affordances; ``relationships`` lists
+        ``(subject_id, object_id, predicate_id, predicate)`` tuples.
+        """
+
+        try:
+            return copy.deepcopy(self._scene_graphs[str(sample_id)])
+        except KeyError as exc:
+            raise UnsupportedOperationError(
+                f"3DSSG publishes no scene graph for 3RScan scan {sample_id!r}."
+            ) from exc
 
     def get_scene_info(self, sample_id: str) -> dict:
         """Return split, reference grouping, and annotation availability."""

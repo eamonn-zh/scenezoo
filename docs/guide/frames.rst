@@ -92,6 +92,8 @@ Camera conventions
 
 All datasets are converted to the same conventions:
 
+- **World coordinates** are z-up and in metres for every dataset; see
+  :ref:`coordinate-system`.
 - **Poses** are ``world_to_camera`` matrices in the OpenCV convention: the
   camera looks along +Z, +X points right, and +Y points down in the image. Use
   ``np.linalg.inv(world_to_camera)`` for the camera-to-world pose (the camera
@@ -103,6 +105,9 @@ All datasets are converted to the same conventions:
   Z axis, depth is the distance along each pixel's viewing ray, and
   ``frames.depth_mode`` is ``"ray_distance"``.
 - **Images** are top-left origin, row-major arrays, as usual for NumPy.
+- **Normal maps** (``normal_maps``) hold unit normals in the same OpenCV
+  camera axes, pointing towards the camera, whatever axes the dataset stores
+  them in.
 
 With these conventions, a pixel ``(u, v)`` with depth ``d`` is at camera point
 ``d * inv(K) @ [u, v, 1]``, and a world point ``X`` lands on pixel

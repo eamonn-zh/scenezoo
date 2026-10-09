@@ -25,7 +25,7 @@ def _write_rendering(base, *, panorama=False):
     instance = np.full((height, width), 5, np.uint16)
     instance[0, 0] = 65535
     albedo = np.full((height, width, 4), (40, 50, 60, 255), np.uint8)
-    normal = np.full((height, width, 3), (128, 128, 255), np.uint8)
+    normal = np.full((height, width, 3), (255, 128, 128), np.uint8)  # +x
     for name, value in (
         ("depth.png", depth),
         ("semantic.png", semantic),
@@ -127,14 +127,16 @@ def _write_scene(root):
     return scene
 
 
-def test_splits_metadata_rooms_annotations_and_errata(tmp_path):
+def test_splits_metadata_rooms_annotations_and_errata(tmp_path, structured3d_metadata):
     _write_scene(tmp_path)
-    dataset = Structured3D(tmp_path, offline=True)
+    dataset = Structured3D(tmp_path, offline=True, **structured3d_metadata)
     assert dataset.get_ids("train")[0] == "scene_00000"
     # Official ranges by default; the errata's invalid scenes can be dropped.
     assert len(dataset.get_ids("train")) == 3000
     assert len(dataset.get_ids("test")) == 250
-    filtered = Structured3D(tmp_path, offline=True, include_invalid=False)
+    filtered = Structured3D(
+        tmp_path, offline=True, include_invalid=False, **structured3d_metadata
+    )
     assert len(filtered.get_ids("train")) == 2995
     assert len(filtered.get_ids("test")) == 249
     assert dataset.metadata["label_names"][5] == "chair"
@@ -156,9 +158,11 @@ def test_splits_metadata_rooms_annotations_and_errata(tmp_path):
         filtered.get_room_ids("scene_01155")
 
 
-def test_perspective_frames_preserve_ids_camera_and_modalities(tmp_path):
+def test_perspective_frames_preserve_ids_camera_and_modalities(
+    tmp_path, structured3d_metadata
+):
     _write_scene(tmp_path)
-    dataset = Structured3D(tmp_path, offline=True)
+    dataset = Structured3D(tmp_path, offline=True, **structured3d_metadata)
     batch = dataset.get_frames(
         "scene_00000",
         room_id="10",
@@ -208,9 +212,9 @@ def test_perspective_frames_preserve_ids_camera_and_modalities(tmp_path):
     assert np.allclose(cropped.rgb_intrinsics[0, :2, 2], (1.0, 0.5))
 
 
-def test_panorama_frames_boxes_mesh_and_point_data(tmp_path):
+def test_panorama_frames_boxes_mesh_and_point_data(tmp_path, structured3d_metadata):
     _write_scene(tmp_path)
-    dataset = Structured3D(tmp_path, offline=True)
+    dataset = Structured3D(tmp_path, offline=True, **structured3d_metadata)
     batch = dataset.get_frames(
         "scene_00000",
         room_id="10",
@@ -256,7 +260,7 @@ def test_panorama_frames_boxes_mesh_and_point_data(tmp_path):
     )
 
 
-def test_official_zip_shards_require_extraction(tmp_path):
+def test_official_zip_shards_require_extraction(tmp_path, structured3d_metadata):
     source_root = tmp_path / "source"
     scene = _write_scene(source_root)
     archive_root = tmp_path / "archives"
@@ -270,7 +274,7 @@ def test_official_zip_shards_require_extraction(tmp_path):
                 archive.write(
                     path, f"Structured3D/{path.relative_to(source_root / 'data')}"
                 )
-    dataset = Structured3D(archive_root, offline=True)
+    dataset = Structured3D(archive_root, offline=True, **structured3d_metadata)
     report = dataset.check(sample_ids=("scene_00000",))
     assert not report.ok
     assert any(issue.code == "scene-not-extracted" for issue in report.errors)
@@ -290,3 +294,25 @@ def test_store_uses_extracted_scene_only(tmp_path):
     annotation.parent.mkdir()
     annotation.write_text("{}")
     assert store.read_text("scene_00000/annotation_3d.json") == "{}"
+
+
+def test_normal_maps_are_converted_to_opencv_camera_axes(
+    tmp_path, structured3d_metadata
+):
+    _write_scene(tmp_path)
+    dataset = Structured3D(tmp_path, offline=True, **structured3d_metadata)
+    room = dataset.get_room_ids("scene_00000")[0]
+    perspective = dataset.get_frames(
+        "scene_00000", room_id=room, indices=[0], items=("normal_maps",)
+    )
+    panorama = dataset.get_frames(
+        "scene_00000",
+        room_id=room,
+        source="panorama",
+        indices=[0],
+        items=("normal_maps",),
+    )
+    # Stored +x: perspective keeps x (flips y); panoramas map (x, y, z) to
+    # (-z, -y, x). Both were measured against normals derived from depth.
+    np.testing.assert_allclose(perspective.normal_maps[0, 0, 0], [1, 0, 0], atol=0.01)
+    np.testing.assert_allclose(panorama.normal_maps[0, 0, 0], [0, 0, 1], atol=0.01)

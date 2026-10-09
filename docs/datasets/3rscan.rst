@@ -15,6 +15,8 @@ across the scans and the changes between them annotated.
        ``02b33dfb-be2b-2d54-92d2-cd012b2b3c40``
    * - Splits
      - ``train`` (1,178), ``val`` (157), ``test`` (147), from ``3RScan.json``
+   * - Coordinates
+     - z-up, metres, as released; see :ref:`coordinate-system`
    * - Data
      - Meshes, vertex segmentation in six label spaces, boxes, RGB-D frames,
        scan-to-reference alignment
@@ -76,6 +78,12 @@ the official repository list only reference scans and are not used.)
   deformed, and removed objects, and ambiguities.
 - ``get_scene_info(scan_id)`` returns the split, reference, and annotation
   status of a scan.
+- ``get_scene_graph(scan_id)`` returns the scan's 3DSSG scene graph, which the
+  3RScan authors publish separately: each object's label, attributes (color,
+  shape, state, ...), and affordances, keyed by the instance IDs of
+  ``get_segmentation``, and ``(subject_id, object_id, predicate_id, predicate)``
+  relationships such as ``"standing on"``. The two JSON files are downloaded
+  once from the 3DSSG site; ``scene_graph_files`` holds their locations.
 
 The 101 hidden test rescans have no published annotations or alignment;
 requesting those raises :class:`~scenezoo.UnsupportedOperationError`, while
@@ -90,7 +98,7 @@ Meshes and labels
 - ``get_segmentation`` labels the vertices of the instance mesh. Choose
   ``segmentation_type`` from ``"instance"`` (default), ``"global"``,
   ``"nyu40"``, ``"eigen13"``, ``"rio27"``, and ``"rio7"``. The label mapping is
-  installed with SceneZoo.
+  the official table linked from the 3RScan repository, downloaded once.
 - ``get_boxes`` fits boxes to objects; ``box_type="obb_gt"`` returns the
   annotated oriented boxes.
 - ``get_annotations`` and ``get_oversegmentation`` return the raw instance
@@ -114,6 +122,7 @@ Official resources
 * `Official tools <https://github.com/WaldJohannaU/3RScan>`__
 * `Paper (ICCV 2019) <https://openaccess.thecvf.com/content_ICCV_2019/html/Wald_RIO_3D_Object_Instance_Re-Localization_in_Changing_Indoor_Environments_ICCV_2019_paper.html>`__
 * `FAQ <https://github.com/WaldJohannaU/3RScan/blob/master/FAQ.md>`__
+* `3DSSG scene graphs <https://3dssg.github.io/>`__ and `paper (CVPR 2020) <https://arxiv.org/abs/2004.03967>`__
 
 API reference
 -------------
@@ -148,6 +157,8 @@ and ``sequence_archive``. ``dataset_metadata_file`` locates ``3RScan.json`` and
      - Rescan-to-reference transform.
    * - ``get_changes``
      - Object change annotations.
+   * - ``get_scene_graph``
+     - 3DSSG objects, attributes, and relationships.
 
 .. autoclass:: scenezoo.dataset.scene.ThreeRScan
    :members:

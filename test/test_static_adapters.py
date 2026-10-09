@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import open3d as o3d
 import pytest
 
 import scenezoo.dataset.scene.scenenn as scenenn_module
@@ -49,16 +50,22 @@ def test_scenenn_metadata_mesh_alignment_and_vertex_segmentation(tmp_path, monke
         '<root><label id="3" color="255 0 0" text="chair" /></root>'
     )
 
-    class Mesh:
-        def __init__(self, count):
-            self.vertices = np.zeros((count, 3))
+    def Mesh(count):
+        # y-up vertices (0, k, 0): one unit up per vertex.
+        vertices = np.array([[0.0, k, 0.0] for k in range(count)])
+        return o3d.geometry.TriangleMesh(
+            o3d.utility.Vector3dVector(vertices),
+            o3d.utility.Vector3iVector([[0, 1, 2]]),
+        )
 
     monkeypatch.setattr(scenenn_module, "load_triangle_mesh", lambda path: Mesh(3))
     dataset = SceneNN(tmp_path, room_category_file=categories)
     assert dataset.splits == {}
     assert dataset.get_ids() == ["scene"]
     assert dataset.metadata == {"room_categories": {"office": ["scene"]}}
-    assert len(dataset.get_mesh("scene").vertices) == 3
+    vertices = np.asarray(dataset.get_mesh("scene").vertices)
+    assert len(vertices) == 3
+    np.testing.assert_allclose(vertices[:, 2], [0, 1, 2])  # y-up became z-up
     segmentation = dataset.get_segmentation("scene")
     assert segmentation.domain == "vertex"
     assert segmentation.labels.tolist() == [3, -1, 3]

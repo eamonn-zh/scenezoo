@@ -16,6 +16,8 @@ panoramas, and dense semantic and instance annotations.
      - ``nvs_sem_train``, ``nvs_sem_val``, ``nvs_test``, ``sem_test``,
        ``nvs_test_small``, ``nvs_test_iphone``; read from the release's
        ``splits/`` folder (files that are absent are skipped)
+   * - Coordinates
+     - z-up, metres, as released; see :ref:`coordinate-system`
    * - Data
      - Meshes, laser point clouds, vertex segmentation, boxes, and frames from
        iPhone, DSLR, and panorama cameras

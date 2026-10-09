@@ -233,7 +233,7 @@ def test_scannet_raw_and_decimated_semantic_segmentation(tmp_path):
     assert semantic.id_to_name[5] == "chair"
 
 
-def test_scannet_scene_info_calibration_and_packaged_offline_splits(tmp_path):
+def test_scannet_scene_info_calibration_and_official_splits(tmp_path, scannet_splits):
     scene = "scene0000_00"
     directory = tmp_path / "scans" / scene
     directory.mkdir(parents=True)
@@ -247,11 +247,11 @@ def test_scannet_scene_info_calibration_and_packaged_offline_splits(tmp_path):
         "sceneType = Apartment\n"
     )
 
-    dataset = ScanNet(tmp_path, offline=True)
+    dataset = ScanNet(tmp_path, offline=True, **scannet_splits)
     assert {key: len(value) for key, value in dataset.splits.items()} == {
-        "train": 1201,
-        "val": 312,
-        "test": 100,
+        "train": 2,
+        "val": 1,
+        "test": 1,
     }
     info = dataset.get_scene_info(scene)
     assert info["sceneType"] == "Apartment"

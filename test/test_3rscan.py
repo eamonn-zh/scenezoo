@@ -83,10 +83,12 @@ end_header
     )
 
 
-def test_3rscan_complete_split_scene_metadata_and_alignment(tmp_path):
+def test_3rscan_complete_split_scene_metadata_and_alignment(
+    tmp_path, rio_label_mapping
+):
     (tmp_path / "download").mkdir()
     _write_metadata(tmp_path)
-    dataset = ThreeRScan(tmp_path, offline=True)
+    dataset = ThreeRScan(tmp_path, offline=True, label_mapping_file=rio_label_mapping)
 
     assert dataset.get_ids("train") == ["train-ref", "train-rescan"]
     assert dataset.get_ids("test") == ["test-ref", "test-hidden"]
@@ -102,12 +104,17 @@ def test_3rscan_complete_split_scene_metadata_and_alignment(tmp_path):
         dataset.get_scene_alignment("test-hidden")
 
 
-def test_3rscan_instance_and_semantic_spaces(tmp_path):
+def test_3rscan_instance_and_semantic_spaces(tmp_path, rio_label_mapping):
     scans = tmp_path / "download"
     scans.mkdir()
     _write_metadata(tmp_path)
     _write_annotations(scans / "train-ref")
-    dataset = ThreeRScan(tmp_path, offline=True, invalid_obj_id=-1)
+    dataset = ThreeRScan(
+        tmp_path,
+        offline=True,
+        invalid_obj_id=-1,
+        label_mapping_file=rio_label_mapping,
+    )
 
     instance = dataset.get_segmentation("train-ref")
     assert instance.labels.tolist() == [-1, 1, 1, 1]
@@ -137,10 +144,66 @@ def test_3rscan_instance_and_semantic_spaces(tmp_path):
         dataset.get_segmentation("test-hidden")
 
 
-def test_3rscan_mapping_is_packaged_for_offline_use(tmp_path):
+def test_3rscan_reads_the_official_label_mapping_table(tmp_path, rio_label_mapping):
     (tmp_path / "download").mkdir()
     _write_metadata(tmp_path)
-    metadata = ThreeRScan(tmp_path, offline=True).metadata
+    metadata = ThreeRScan(
+        tmp_path, offline=True, label_mapping_file=rio_label_mapping
+    ).metadata
     assert metadata["scan_count"] == 4
     assert metadata["reference_count"] == 2
     assert metadata["label_mapping"]["armchair"]["rio27_name"] == "chair"
+
+
+def test_3rscan_scene_graph_from_3dssg_files(tmp_path, rio_label_mapping):
+    (tmp_path / "download").mkdir()
+    _write_metadata(tmp_path)
+    objects = tmp_path / "objects.json"
+    relationships = tmp_path / "relationships.json"
+    objects.write_text(
+        json.dumps(
+            {
+                "scans": [
+                    {
+                        "scan": "train-ref",
+                        "objects": [
+                            {
+                                "id": "1",
+                                "label": "armchair",
+                                "attributes": {"color": ["red"]},
+                            },
+                            {
+                                "id": "2",
+                                "label": "floor",
+                                "affordances": ["walking on"],
+                            },
+                        ],
+                    }
+                ]
+            }
+        )
+    )
+    relationships.write_text(
+        json.dumps(
+            {
+                "scans": [
+                    {"scan": "train-ref", "relationships": [[1, 2, 15, "standing on"]]}
+                ]
+            }
+        )
+    )
+    dataset = ThreeRScan(
+        tmp_path,
+        offline=True,
+        label_mapping_file=rio_label_mapping,
+        scene_graph_objects_file=objects,
+        scene_graph_relationships_file=relationships,
+    )
+    graph = dataset.get_scene_graph("train-ref")
+    assert graph["objects"][1] == {
+        "label": "armchair",
+        "attributes": {"color": ["red"]},
+    }
+    assert graph["relationships"] == [(1, 2, 15, "standing on")]
+    with pytest.raises(UnsupportedOperationError, match="no scene graph"):
+        dataset.get_scene_graph("test-ref")

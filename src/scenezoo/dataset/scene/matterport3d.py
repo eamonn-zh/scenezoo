@@ -245,6 +245,8 @@ class Matterport3D(Dataset):
         undistorted_camera_dir="{scene_id}/undistorted_camera_parameters",
         undistorted_color_dir="{scene_id}/undistorted_color_images",
         undistorted_depth_dir="{scene_id}/undistorted_depth_images",
+        undistorted_normal_dir="{scene_id}/undistorted_normal_images",
+        skybox_dir="{scene_id}/matterport_skybox_images",
         label_mapping_file=_CATEGORY_MAPPING_URL,
         train_split_file=_TRAIN_SPLIT_URL,
         val_split_file=_VAL_SPLIT_URL,
@@ -264,6 +266,7 @@ class Matterport3D(Dataset):
         self.house_segmentation_dir = house_segmentation_dir
         self.region_segmentation_dir = region_segmentation_dir
         self.poisson_dir = poisson_dir
+        self.skybox_dir = skybox_dir
         self.frame_dirs = {
             "raw": {
                 "rgb": raw_color_dir,
@@ -275,6 +278,7 @@ class Matterport3D(Dataset):
                 "camera": undistorted_camera_dir,
                 "rgb": undistorted_color_dir,
                 "depth": undistorted_depth_dir,
+                "normal": undistorted_normal_dir,
             },
         }
         self.label_mapping_file = label_mapping_file
@@ -1187,6 +1191,44 @@ class Matterport3D(Dataset):
             for basename in basenames
         ]
 
+    def _normal_maps(self, sample_id, records, image_size, output_size, center_crop):
+        """Official normals of the undistorted depth, in OpenCV camera axes."""
+
+        bundle = self._asset_index(sample_id, "undistorted", "normal")
+        maps = []
+        for record in records:
+            stem = str(record["depth"]).rsplit(".", 1)[0]
+            names = [f"{stem}_n{axis}.png" for axis in "xyz"]
+            channels = self._read_images(bundle, names, item="normal_maps")
+            # Stored as 32768 * (1 + n) in OpenGL camera axes (y up, z back),
+            # at half the image resolution.
+            normals = np.stack(channels, -1).astype(np.float32) / 32768.0 - 1.0
+            normals *= np.array([1.0, -1.0, -1.0], np.float32)
+            width, height = image_size(record)
+            rows = np.arange(height) * normals.shape[0] // height
+            columns = np.arange(width) * normals.shape[1] // width
+            normals = normals[rows[:, None], columns[None, :]]
+            transform = build_pixel_transform(
+                (width, height), output_size=output_size, center_crop=center_crop
+            )
+            maps.append(
+                np.stack(  # per channel: PIL resizes only single-channel floats
+                    [
+                        apply_image_transform(
+                            np.ascontiguousarray(normals[..., axis]),
+                            transform,
+                            resample=Image.Resampling.NEAREST,
+                        )
+                        for axis in range(3)
+                    ],
+                    -1,
+                )
+            )
+        if not maps:
+            width, height = (0, 0) if output_size is None else map(int, output_size)
+            return np.empty((0, height, width, 3), np.float32)
+        return np.stack(maps).astype(np.float32)
+
     @staticmethod
     def _camera_valid(record: dict) -> bool:
         intrinsic = record["intrinsics"]
@@ -1198,6 +1240,24 @@ class Matterport3D(Dataset):
             and intrinsic.shape == (3, 3)
             and valid_camera_mask(np.asarray(pose)[None])[0]
         )
+
+    def get_panorama_ids(self, sample_id) -> list[str]:
+        """Return the panorama (tripod position) IDs that have skybox images."""
+
+        _, index = self._index(self.skybox_dir, str(sample_id))
+        return sorted(
+            {name.split("_skybox", 1)[0] for name in index if "_skybox" in name}
+        )
+
+    def get_skybox_images(self, sample_id, panorama_id) -> np.ndarray:
+        """Return the six official skybox faces of one panorama, ``(6, H, W, 3)``.
+
+        Faces are in file order (``skybox0`` to ``skybox5``), as released.
+        """
+
+        bundle = self._index(self.skybox_dir, str(sample_id))
+        names = [f"{panorama_id}_skybox{face}_sami.jpg" for face in range(6)]
+        return np.stack(self._read_images(bundle, names, item="rgb"))
 
     def get_frames(
         self,
@@ -1229,6 +1289,8 @@ class Matterport3D(Dataset):
             "depth_intrinsics",
             "world_to_camera",
         }
+        if source == "undistorted":
+            supported.add("normal_maps")
         items = validate_frame_items(items, supported)
         records = self._frame_records(str(sample_id), source)
         camera_requested = bool(
@@ -1253,6 +1315,11 @@ class Matterport3D(Dataset):
                     f"Matterport3D {item} directory was not found for "
                     f"{sample_id!r}: {self._path(template, str(sample_id))}"
                 )
+        normal_index = (
+            self._asset_index(str(sample_id), source, "normal")[1]
+            if "normal_maps" in items
+            else None
+        )
         available = []
         for index, record in enumerate(records):
             if camera_requested and not self._camera_valid(record):
@@ -1262,6 +1329,13 @@ class Matterport3D(Dataset):
                 or bundles[item][0] is None
                 or record[item] not in bundles[item][1]
                 for item in bundles
+            ):
+                continue
+            if (
+                indices is None
+                and normal_index is not None
+                and f"{str(record['depth']).rsplit('.', 1)[0]}_nz.png"
+                not in normal_index
             ):
                 continue
             available.append(index)
@@ -1374,6 +1448,11 @@ class Matterport3D(Dataset):
             values["depth"] = depth.astype(np.float32) / _DEPTH_UNITS_PER_METRE
             if not image_sizes:
                 image_sizes = depth_sizes
+
+        if "normal_maps" in items:
+            values["normal_maps"] = self._normal_maps(
+                str(sample_id), chosen, image_size, output_size, center_crop
+            )
 
         def camera_matrices(item: str):
             nonlocal image_sizes

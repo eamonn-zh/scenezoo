@@ -16,6 +16,10 @@ segmentation labels, 3D boxes, and synchronized RGB-D frames with cameras as
 NumPy arrays and Open3D objects, without writing a new loader for every
 dataset.
 
+.. image:: _static/teaser.jpg
+   :alt: RGB, depth, normals, rendered RGB, semantic segmentation, and the 3D scene with its camera trajectory, read from one ScanNet++ capture
+   :width: 100%
+
 .. code-block:: python
 
    from scenezoo import get_dataset
@@ -36,12 +40,14 @@ dataset.
 Why SceneZoo
 -------------
 
-- **One API for ten datasets.** ScanNet, ScanNet++, ARKitScenes, MultiScan,
-  Aria Synthetic Environments, 3RScan, S3DIS, Matterport3D, SceneNN, and
-  Structured3D. See :doc:`datasets/index`.
-- **Consistent conventions.** Depth is always metres, camera poses are always
-  OpenCV ``world_to_camera`` matrices, and resizing or rotating images updates
-  the intrinsics to match. See :doc:`guide/frames`.
+- **Built-in datasets, and room for yours.** ScanNet, ScanNet++, ARKitScenes,
+  MultiScan, Aria Synthetic Environments, 3RScan, S3DIS, Matterport3D, SceneNN,
+  Structured3D, and 3D-FRONT are built in (see :doc:`datasets/index`), and you can
+  register your own datasets with the same API (see
+  :doc:`guide/custom_datasets`).
+- **Consistent conventions.** Every scene is z-up in metres, depth is always
+  metres, camera poses are always OpenCV ``world_to_camera`` matrices, and
+  resizing or rotating images updates the intrinsics to match. See :doc:`guide/frames`.
 - **Reads the official release directly.** No conversion step: frames are
   decoded on demand from the released files (``.sens``, ``.mov``, ZIP
   sequences, and so on), and only the frames you ask for are read.
